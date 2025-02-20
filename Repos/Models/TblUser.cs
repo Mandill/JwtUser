@@ -42,4 +42,6 @@ public partial class TblUser
 
     [Column("isactive")]
     public bool? Isactive { get; set; }
+
+    public List<TblRefreshtoken> RefreshTokens { get; set; }
 }

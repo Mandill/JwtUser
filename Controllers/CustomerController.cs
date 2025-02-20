@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace JwtUser.Controllers
 {
-    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class CustomerController : ControllerBase
@@ -28,6 +27,7 @@ namespace JwtUser.Controllers
             return Ok(customers);
         }
 
+        [Authorize]
         [HttpGet("GetByCode/{code}")]
         [ProducesResponseType(200)]
         public async Task<IActionResult> GetCustomersByCode([FromRoute] string code)

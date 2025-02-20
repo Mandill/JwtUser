@@ -2,12 +2,12 @@
 using System.Security.Claims;
 using System.Text;
 using AutoMapper;
-using Azure;
 using JwtUser.Helper;
 using JwtUser.Modal;
 using JwtUser.Repos;
 using JwtUser.Repos.Models;
 using JwtUser.Service;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
@@ -28,23 +28,26 @@ namespace JwtUser.Container
 
         public async Task<APIResponse<TokenModel>> LoginAsync(LoginModel login)
         {
-            APIResponse<TokenModel> apiresponse = new APIResponse<TokenModel>();
-            TblUser user = _context.TblUsers.FirstOrDefault(x => x.Username == login.UserName && x.Password == login.Password);
+            APIResponse<TokenModel> apiResponse = new APIResponse<TokenModel>();
+
+            TblUser? user = _context.TblUsers.FirstOrDefault(x => x.Username == login.UserName && x.Password == login.Password);
+
             if (user == null)
             {
-                apiresponse.ResponseCode = 404;
-                apiresponse.Message = "Invalid username or password";
-                return apiresponse;
+                apiResponse.ResponseCode = 404;
+                apiResponse.Message = "Invalid username or password";
+                return apiResponse;
             }
+
             UserModel userModel = _mapper.Map<TblUser, UserModel>(user!);
             AuthResult authenticationResult = await AuthenticateAsync(userModel);
 
             if (authenticationResult != null && authenticationResult.Success)
             {
-                apiresponse.Result = new TokenModel() { Token = authenticationResult.Token, RefreshToken = authenticationResult.RefreshToken };
-                apiresponse.Message = "Success";
+                apiResponse.Result = new TokenModel() { Token = authenticationResult.Token, RefreshToken = authenticationResult.RefreshToken };
+                apiResponse.Message = "Success";
             }
-            return apiresponse;
+            return apiResponse;
         }
 
         public async Task<AuthResult> AuthenticateAsync(UserModel user)
@@ -62,16 +65,38 @@ namespace JwtUser.Container
                     new Claim("Phone", user.Phone!),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                     });
+
                 var tokenDescriptor = new SecurityTokenDescriptor
                 {
+                    Audience = _appsettings.JwtSettings.Audience,
+                    Issuer = _appsettings.JwtSettings.Issuer,
                     Subject = subject,
                     Expires = DateTime.UtcNow.Add(_appsettings.JwtSettings.TokenLifetime),
                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
                 };
+
                 var token = tokenHandler.CreateToken(tokenDescriptor);
-                var tokenId = token.Id;
                 authenticationResult.Token = tokenHandler.WriteToken(token);
-                authenticationResult.RefreshToken = null;
+
+                var refreshToken = new RefreshToken
+                {
+                    Refreshtoken = Guid.NewGuid().ToString(),
+                    Tokenid = token.Id,
+                    Expiretime = DateTime.UtcNow.AddMonths(6),
+                    UserId = user.UserId,
+                };
+
+                var existingRefreshToken = await _context.TblRefreshtokens.FirstOrDefaultAsync(rt => rt.Userid == user.UserId);
+                if (existingRefreshToken != null)
+                {
+                    _context.TblRefreshtokens.Remove(existingRefreshToken);
+                }
+
+                TblRefreshtoken tblRefreshToken = _mapper.Map<RefreshToken,TblRefreshtoken>(refreshToken);
+                await _context.TblRefreshtokens.AddAsync(tblRefreshToken);
+                await _context.SaveChangesAsync();
+
+                authenticationResult.RefreshToken = refreshToken.Refreshtoken;
                 authenticationResult.Success = true;
                 return authenticationResult;
             }
@@ -84,6 +109,30 @@ namespace JwtUser.Container
                 return authenticationResult;
             }
 
+        }
+
+        public async Task<APIResponse<TokenModel>> RefreshTokenAsync(TokenModel request)
+        {
+            APIResponse<TokenModel> response = new APIResponse<TokenModel>();
+
+            TblRefreshtoken? existingRefreshToken = await _context.TblRefreshtokens.FirstOrDefaultAsync(x => x.Refreshtoken == request.RefreshToken);
+
+            if (existingRefreshToken == null || existingRefreshToken.Expiretime < DateTime.UtcNow)
+            {
+                response.ResponseCode = 404;
+                response.Message = "Invalid or expired refresh token.";
+                return response;
+            }
+
+            TblUser? user = await _context.TblUsers.FirstOrDefaultAsync(x => x.UserId == existingRefreshToken.Userid);
+            if (user == null)
+            {
+                response.ResponseCode = 404;
+                response.Message = "User not found!";
+                return response;
+            }
+
+            return await LoginAsync(new LoginModel { UserName = user.Username!, Password = user.Password! });
         }
     }
 }
