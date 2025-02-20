@@ -16,9 +16,16 @@ namespace JwtUser.Controllers.Auth
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginModel request)
+        public async Task<IActionResult> LoginAsync([FromBody] LoginModel request)
         {
             var response = await _authService.LoginAsync(request);
+            return Ok(response);
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshTokenAsync([FromBody] TokenModel request)
+        {
+            var response = await _authService.RefreshTokenAsync(request);
             return Ok(response);
         }
     }

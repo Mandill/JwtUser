@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using JwtUser.Repos.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,6 +31,7 @@ public partial class LearnDataContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         OnModelCreatingPartial(modelBuilder);
+        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);

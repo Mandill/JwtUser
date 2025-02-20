@@ -1,19 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
 namespace JwtUser.Repos.Models;
 
-[Keyless]
+[Owned]
 [Table("tbl_refreshtoken")]
 public partial class TblRefreshtoken
 {
     [Column("userid")]
     [StringLength(50)]
     [Unicode(false)]
-    public string? Userid { get; set; }
+    public string Userid { get; set; }
 
     [Column("tokenid")]
     [StringLength(50)]
@@ -23,4 +21,7 @@ public partial class TblRefreshtoken
     [Column("refreshtoken")]
     [Unicode(false)]
     public string? Refreshtoken { get; set; }
+
+    [Column("expiretime", TypeName = "datetime")]
+    public DateTime? Expiretime { get; set; }
 }
