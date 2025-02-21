@@ -43,5 +43,6 @@ public partial class TblUser
     [Column("isactive")]
     public bool? Isactive { get; set; }
 
-    public List<TblRefreshtoken> RefreshTokens { get; set; }
+    [InverseProperty("TblUserUser")]
+    public virtual ICollection<TblRefreshtoken> TblRefreshtokens { get; set; } = new List<TblRefreshtoken>();
 }

@@ -4,7 +4,7 @@
     {
         public APIResponse()
         {
-            this.ResponseCode = 400;
+            this.ResponseCode = 200;
             this.Result = typeof(T) == typeof(List<object>) ? (T)(object)new List<object>() : default!;
         }
         public int ResponseCode { get; set; }
