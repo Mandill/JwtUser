@@ -19,6 +19,10 @@ public partial class LearnDataContext : DbContext
 
     public virtual DbSet<TblCustomer> TblCustomers { get; set; }
 
+    public virtual DbSet<TblImage> TblImages { get; set; }
+
+    public virtual DbSet<TblProduct> TblProducts { get; set; }
+
     public virtual DbSet<TblRefreshtoken> TblRefreshtokens { get; set; }
 
     public virtual DbSet<TblUser> TblUsers { get; set; }
@@ -30,8 +34,8 @@ public partial class LearnDataContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        OnModelCreatingPartial(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        OnModelCreatingPartial(modelBuilder);
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
