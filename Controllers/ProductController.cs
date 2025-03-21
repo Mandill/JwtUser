@@ -35,12 +35,12 @@ namespace JwtUser.Controllers
                 }
 
                 string imagePath = FilePath + "\\" + productCode + ".png";
-                if(System.IO.File.Exists(imagePath))
+                if (System.IO.File.Exists(imagePath))
                 {
                     System.IO.File.Delete(imagePath);
                 }
 
-                using(FileStream stream = System.IO.File.Create(imagePath))
+                using (FileStream stream = System.IO.File.Create(imagePath))
                 {
                     await file.CopyToAsync(stream);
                     response.Message = "Success";
@@ -103,7 +103,7 @@ namespace JwtUser.Controllers
             {
                 string FilePath = GetFilePath(productCode);
                 string ImagePath = FilePath + "\\" + productCode + ".png";
-                if(!System.IO.File.Exists(ImagePath))
+                if (!System.IO.File.Exists(ImagePath))
                 {
                     response.Message = "Not Found";
                     return NotFound(response);
@@ -112,7 +112,7 @@ namespace JwtUser.Controllers
                 response.Result = hostUrl + "/upload/products/" + productCode + "/" + productCode + ".png";
                 return Ok(response);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 response.Message = ex.Message;
                 return NotFound(response);
@@ -128,16 +128,16 @@ namespace JwtUser.Controllers
             {
                 List<string> imageUrls = new List<string>();
                 string FilePath = GetFilePath(productCode);
-                
-                if(System.IO.Directory.Exists(FilePath))
+
+                if (System.IO.Directory.Exists(FilePath))
                 {
                     DirectoryInfo directoryInfo = new DirectoryInfo(FilePath); // Checkout
                     FileInfo[] fileInfos = directoryInfo.GetFiles();
-                    foreach (FileInfo fileInfo in fileInfos )
+                    foreach (FileInfo fileInfo in fileInfos)
                     {
                         string filename = fileInfo.Name;
                         string imagepath = FilePath + "\\" + filename;
-                        if(System.IO.File.Exists(imagepath))
+                        if (System.IO.File.Exists(imagepath))
                         {
                             string imageurl = hostUrl + "/upload/products/" + productCode + "/" + filename;
                             imageUrls.Add(imageurl);
@@ -169,7 +169,7 @@ namespace JwtUser.Controllers
 
                 if (System.IO.Directory.Exists(FilePath))
                 {
-                    string imagepath = FilePath + "\\" + productCode + ".png" ;
+                    string imagepath = FilePath + "\\" + productCode + ".png";
                     if (System.IO.File.Exists(imagepath))
                     {
                         MemoryStream stream = new MemoryStream();
@@ -191,14 +191,13 @@ namespace JwtUser.Controllers
             {
                 return NotFound(ex.Message);
             }
-
         }
 
         [HttpGet("Remove")]
         public async Task<IActionResult> Remove(string productCode)
         {
-            APIResponse<string> apiResponse = new APIResponse<string>(); 
-           try
+            APIResponse<string> apiResponse = new APIResponse<string>();
+            try
             {
                 string FilePath = GetFilePath(productCode);
                 if (System.IO.Directory.Exists(FilePath))
@@ -211,7 +210,7 @@ namespace JwtUser.Controllers
                 }
                 else
                 {
-                    apiResponse.Message = "Not Found!";
+                    apiResponse.Message = "File or directory not found!";
                     apiResponse.ResponseCode = 404;
                     apiResponse.Result = "";
                     return NotFound(apiResponse);
@@ -221,7 +220,10 @@ namespace JwtUser.Controllers
             }
             catch (Exception ex)
             {
-                return NotFound(ex.Message);
+                apiResponse.Message = "An error occurred while deleting the file.";
+                apiResponse.ResponseCode = 500;
+                apiResponse.Result = ex.Message;
+                return StatusCode(500, apiResponse);
             }
         }
 
@@ -276,7 +278,7 @@ namespace JwtUser.Controllers
                     using (MemoryStream stream = new MemoryStream())
                     {
                         await file.CopyToAsync(stream);
-                        _context.TblImages.Add(new TblImage { ProductId = productcode, ImageData = stream.ToArray() , ImageName = file.FileName });
+                        _context.TblImages.Add(new TblImage { ProductId = productcode, ImageData = stream.ToArray(), ImageName = file.FileName });
                         await _context.SaveChangesAsync();
                     }
                     passcount++;
@@ -300,9 +302,9 @@ namespace JwtUser.Controllers
             try
             {
                 var imageUrls = await _context.TblImages.Where(x => x.ProductId == productcode).ToListAsync();
-                if(imageUrls != null && imageUrls.Count() > 0)
+                if (imageUrls != null && imageUrls.Count() > 0)
                 {
-                    foreach(var image in imageUrls)
+                    foreach (var image in imageUrls)
                     {
                         imagesBase64.Add(Convert.ToBase64String(image.ImageData));
                     }
@@ -352,7 +354,7 @@ namespace JwtUser.Controllers
         }
 
         [NonAction]
-        public string GetFilePath (string productCode)
+        public string GetFilePath(string productCode)
         {
             string FilePath = _webHostEnvironment.WebRootPath + "\\upload\\products\\" + productCode;
             return FilePath;

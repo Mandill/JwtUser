@@ -44,7 +44,7 @@ namespace JwtUser.Container
 
             if (authenticationResult != null && authenticationResult.Success)
             {
-                apiResponse.Result = new TokenModel() { Token = authenticationResult.Token, RefreshToken = authenticationResult.RefreshToken };
+                apiResponse.Result = new TokenModel() { Token = authenticationResult.Token, RefreshToken = authenticationResult.RefreshToken ,Role = user.Role! ,Username = user.Username! };
                 apiResponse.Message = "Success";
             }
             return apiResponse;
@@ -79,7 +79,7 @@ namespace JwtUser.Container
                 authenticationResult.Token = tokenHandler.WriteToken(token);
 
                 var refreshToken = new RefreshToken
-                {
+                { 
                     Refreshtoken = Guid.NewGuid().ToString(),
                     Tokenid = token.Id,
                     Expiretime = DateTime.UtcNow.AddMonths(6),

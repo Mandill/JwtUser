@@ -39,7 +39,6 @@ namespace JwtUser.Container
                     {
                         Message = "Customer already available with the given code!",
                         ResponseCode = 402,
-                        Result = new CustomerModal()
                     };
                 }
                 await _context.TblCustomers.AddAsync(customer);
@@ -106,7 +105,7 @@ namespace JwtUser.Container
 
                 return new APIResponse<CustomerModal>()
                 {
-                    ResponseCode = 400,
+                    ResponseCode = 200,
                     Message = "Customer removed successfully",
                     Result = response,
                 };

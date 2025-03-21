@@ -43,6 +43,10 @@ void ConfigureServices(WebApplicationBuilder builder)
 
     builder.Services.AddScoped<ICustomerService, CustomerService>();
     builder.Services.AddScoped<IAuthService, AuthService>();
+    builder.Services.AddScoped<IUserService, UserService>();
+    builder.Services.AddScoped<IUserRoleService, UserRoleService>();
+
+
     builder.Services.Configure<ServiceConfiguration>(builder.Configuration.GetSection("ServiceConfiguration"));
 
     var automapper = new MapperConfiguration(item => item.AddProfile(new AutoMapperHandler()));
