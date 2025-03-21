@@ -9,6 +9,12 @@ namespace JwtUser.Modal
 
         [JsonProperty("refreshToken")]
         public string RefreshToken { get; set; }
+
+        [JsonProperty("role")]
+        public string Role { get; set; }
+
+        [JsonProperty("username")]
+        public string Username { get; set; }
     }
 
     public class AuthResult : TokenModel

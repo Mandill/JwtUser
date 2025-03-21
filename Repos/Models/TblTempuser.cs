@@ -2,35 +2,39 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Runtime.InteropServices;
 using Microsoft.EntityFrameworkCore;
 
 namespace JwtUser.Repos.Models;
 
-[Table("tbl_customer")]
-public partial class TblCustomer
+[Table("tbl_tempuser")]
+public partial class TblTempuser
 {
     [Key]
+    [Column("id")]
+    public int Id { get; set; }
+
+    [Column("code")]
     [StringLength(50)]
     [Unicode(false)]
     public string Code { get; set; } = null!;
 
-    [StringLength(50)]
+    [Column("name")]
+    [StringLength(250)]
     [Unicode(false)]
     public string Name { get; set; } = null!;
 
-    [StringLength(50)]
+    [Column("email")]
+    [StringLength(100)]
     [Unicode(false)]
     public string? Email { get; set; }
 
-    [StringLength(50)]
+    [Column("phone")]
+    [StringLength(20)]
     [Unicode(false)]
     public string? Phone { get; set; }
 
-    [Column(TypeName = "decimal(18, 2)")]
-    public decimal? Creditlimit { get; set; }
-
-    public bool? IsActive { get; set; }
-
-    public int? Taxcode { get; set; }
+    [Column("password")]
+    [StringLength(50)]
+    [Unicode(false)]
+    public string? Password { get; set; }
 }

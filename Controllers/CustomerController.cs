@@ -1,4 +1,7 @@
-﻿using JwtUser.Modal;
+﻿using System.Data;
+using ClosedXML.Excel;
+using JwtUser.Helper;
+using JwtUser.Modal;
 using JwtUser.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,11 +10,16 @@ namespace JwtUser.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
+
     public class CustomerController : ControllerBase
     {
         private ICustomerService _customerService;
-        public CustomerController(ICustomerService customerService)
+        private readonly IWebHostEnvironment _webhostenvironment;
+
+        public CustomerController(IWebHostEnvironment webhostenvironment, ICustomerService customerService)
         {
+            _webhostenvironment = webhostenvironment;
             _customerService = customerService;
         }
 
@@ -27,7 +35,6 @@ namespace JwtUser.Controllers
             return Ok(customers);
         }
 
-        [Authorize]
         [HttpGet("GetByCode/{code}")]
         [ProducesResponseType(200)]
         public async Task<IActionResult> GetCustomersByCode([FromRoute] string code)
@@ -40,7 +47,7 @@ namespace JwtUser.Controllers
             return Ok(customer);
         }
 
-        [HttpDelete("Customer/{code}")]
+        [HttpDelete("DeleteCustomer/{code}")]
         [ProducesResponseType(200)]
         public async Task<IActionResult> RemoveCustomer([FromRoute] string code)
         {
@@ -60,12 +67,71 @@ namespace JwtUser.Controllers
         [ProducesResponseType(200)]
         public async Task<IActionResult> UpdateCustomer([FromBody] CustomerModal data, [FromRoute] string code)
         {
-            var response = await _customerService.UpdateCustomerAsync(code,data);
-            if(response.ResponseCode == 400)
+            var response = await _customerService.UpdateCustomerAsync(code, data);
+            if (response.ResponseCode == 400)
             {
                 return NotFound();
             }
             return Ok(response);
+        }
+
+        [HttpGet("ExportExcel")]
+        public async Task<IActionResult> ExportExcel()
+        {
+            APIResponse<string> apiResponse = new APIResponse<string>();
+            try
+            {
+                var directorypath = GetPath();
+                var excelfilepath = directorypath + "\\Customers.xlsx";
+                var customers = await _customerService.GetAllCustomersAsync();
+                if (customers.Count > 0 && customers != null)
+                {
+                    DataTable dt = new DataTable("Customers");
+                    dt.Columns.Add("Code", typeof(string));
+                    dt.Columns.Add("Name", typeof(string));
+                    dt.Columns.Add("Email", typeof(string));
+                    dt.Columns.Add("CreditLimit", typeof(string));
+                    dt.Columns.Add("IsActive", typeof(string));
+                    dt.Columns.Add("StatusName", typeof(string));
+                    using (XLWorkbook wb = new XLWorkbook())
+                    {
+                        wb.Worksheets.Add(dt, "Customers");
+                        customers.ForEach(x =>
+                        {
+                            dt.Rows.Add(x.Code, x.Name, x.Email, x.CreditLimit, x.IsActive, x.StatusName);
+                        });
+                        using (MemoryStream stream = new MemoryStream())
+                        {
+                            if (System.IO.File.Exists(excelfilepath))
+                            {
+                                System.IO.File.Delete(excelfilepath);
+                            }
+                            wb.SaveAs(excelfilepath);
+                            wb.SaveAs(stream);
+                            return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Customers.xlsx");
+                        }
+                    }
+                }
+                else
+                {
+                    apiResponse.ResponseCode = 400;
+                    apiResponse.Message = "No data found";
+                    return NotFound(apiResponse);
+                }
+            }
+            catch (Exception ex)
+            {
+                apiResponse.ResponseCode = 400;
+                apiResponse.Message = ex.Message;
+                return NotFound(apiResponse);
+            }
+        }
+
+        [NonAction]
+        public string GetPath()
+        {
+            string filePath = _webhostenvironment.WebRootPath + "\\export";
+            return filePath;
         }
     }
 }
